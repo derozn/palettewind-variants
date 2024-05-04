@@ -1,18 +1,18 @@
 {
-  "name": "tailwind-variants",
+  "name": "@lickhome/tailwind-variants",
   "version": "0.2.0",
   "description": "🦄 Tailwindcss first-class variant API",
-  "author": "Junior Garcia <jrgarciadev@gmail.com>",
+  "author": "Nick <banterstudios@gmail.com>",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nextui-org/tailwind-variants"
+    "url": "https://github.com/LickHome/tailwind-variants"
   },
   "bugs": {
-    "url": "https://github.com/nextui-org/tailwind-variants/issues"
+    "url": "https://github.com/LickHome/tailwind-variants/issues"
   },
   "type": "module",
   "main": "dist/index.cjs",
