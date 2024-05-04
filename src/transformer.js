@@ -168,20 +168,53 @@ const transformVariantsByScreens = (variants, screens) => {
   return responsive;
 };
 
+const transformCompoundVariantsByScreens = (variants, screens) => {
+  if (isEmpty(variants)) {
+    return;
+  }
+
+  const responsive = [];
+
+  for (const {class: tvClass, className} of variants) {
+    const formattedClassNames = [tvClass, className].flatMap((clx) => getVariants(clx, screens));
+
+    if (isEmpty(formattedClassNames)) continue;
+
+    screens.forEach((screen) => {
+      let tempClassNames = "";
+
+      formattedClassNames.forEach((className) => {
+        tempClassNames += `${screen}:${className} `;
+      });
+
+      responsive.push(tempClassNames.trimEnd());
+    });
+  }
+
+  return responsive;
+};
+
 const transformContent = ({options, config}, screens) => {
   const variants = options?.variants ?? {};
+  const compoundVariants = options?.compoundVariants ?? [];
   const responsiveVariants = config?.responsiveVariants ?? false;
 
   if (!responsiveVariants || isEmpty(variants)) return;
 
   // responsiveVariants: true
   if (isBoolean(responsiveVariants)) {
-    return transformVariantsByScreens(variants, screens);
+    return [
+      transformVariantsByScreens(variants, screens),
+      transformCompoundVariantsByScreens(compoundVariants, screens),
+    ];
   }
 
   // responsiveVariants: [...]
   if (isArray(responsiveVariants)) {
-    return transformVariantsByScreens(variants, responsiveVariants);
+    return [
+      transformVariantsByScreens(variants, responsiveVariants),
+      transformCompoundVariantsByScreens(compoundVariants, responsiveVariants),
+    ];
   }
 
   // responsiveVariants: {...}

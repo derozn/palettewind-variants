@@ -15,7 +15,7 @@
     "url": "https://github.com/nextui-org/tailwind-variants/issues"
   },
   "type": "module",
-  "main": "dist/index.cjs",
+  "main": "src/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "files": [
