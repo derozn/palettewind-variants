@@ -1,5 +1,5 @@
 {
-  "name": "@lickhome/tailwind-variants",
+  "name": "@derozn/tailwind-variants",
   "version": "0.2.1",
   "description": "🦄 Tailwindcss first-class variant API",
   "author": "Nick <banterstudios@gmail.com>",
