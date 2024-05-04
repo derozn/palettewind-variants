@@ -327,152 +327,93 @@ export const tv = (options, configProp) => {
       return result;
     };
 
-    // const getResponsiveCompoundVariantsValue = (cv = [], slotProps) => {
-    //   let result = [];
-
-    //   function getMatchedObjects(obj1, obj2, parentKey = null) {
-    //     const matchedObjects = [];
-
-    //     function compareObjects(o1, o2) {
-    //       for (const k in o1) {
-    //         if (!(k in o2)) return false;
-    //         if (typeof o1[k] === "object" && typeof o2[k] === "object") {
-    //           const matched = compareObjects(o1[k], o2[k], k);
-
-    //           if (!matched) return false;
-    //         } else {
-    //           if (o1[k] !== o2[k]) return false;
-    //         }
-    //       }
-
-    //       return true;
-    //     }
-
-    //     for (const key in obj2) {
-    //       if (compareObjects(obj1, obj2[key])) {
-    //         const matchedObject = {...obj2[key], cvScreenKey: parentKey || key};
-
-    //         matchedObjects.push(matchedObject);
-    //       }
-    //     }
-
-    //     return matchedObjects;
-    //   }
-
-    //   const propss = getCompleteProps(undefined, slotProps);
-
-    //   const responsiveCV = Object.entries(propss).reduce((acc, [key, value]) => {
-    //     let val = value;
-
-    //     if (typeof value !== "object") {
-    //       val = {initial: value};
-    //     }
-
-    //     return {
-    //       ...acc,
-    //       ...Object.entries(val).reduce(
-    //         (vacc, [screenSize, screenValue]) => ({
-    //           ...vacc,
-    //           [screenSize]: {
-    //             ...acc[screenSize],
-    //             [key]: screenValue,
-    //           },
-    //         }),
-    //         {},
-    //       ),
-    //     };
-    //   }, {});
-
-    //   for (const {class: tvClass, className: tvClassName, ...compoundVariantOptions} of cv) {
-    //     const matches = getMatchedObjects(compoundVariantOptions, responsiveCV);
-
-    //     result = [
-    //       ...result,
-    //       ...matches.flatMap(({cvScreenKey}) =>
-    //         cvScreenKey === "initial"
-    //           ? tvClass || tvClassName
-    //           : getScreenVariantValues(cvScreenKey, tvClass || tvClassName, result),
-    //       ),
-    //     ];
-    //   }
-
-    //   return result;
-    // };
-
     const getResponsiveCompoundVariantsValue = (cv = [], slotProps) => {
       let result = [];
 
-      // Memoization for getCompleteProps
-      const propssCache = new Map();
+      function getMatchedObjects(obj1, obj2, parentKey = null) {
+        const matchedObjects = [];
 
-      function getCompletePropsCached() {
-        if (!propssCache.has(slotProps)) {
-          propssCache.set(slotProps, getCompleteProps(undefined, slotProps));
-        }
+        function compareObjects(o1, o2) {
+          for (const k in o1) {
+            if (Array.isArray(o1[k])) {
+              return o1[k].some((vl) => compareObjects({[k]: vl}, o2));
+            }
 
-        return propssCache.get(slotProps);
-      }
+            if (!(k in o2)) return false;
+            if (typeof o1[k] === "object" && typeof o2[k] === "object") {
+              const matched = compareObjects(o1[k], o2[k], k);
 
-      // Memoization for getScreenVariantValues
-      const screenVariantCache = new Map();
-
-      function getScreenVariantValuesCached(screenKey, tvClass) {
-        const key = screenKey + tvClass;
-
-        if (!screenVariantCache.has(key)) {
-          screenVariantCache.set(key, getScreenVariantValues(screenKey, tvClass));
-        }
-
-        return screenVariantCache.get(key);
-      }
-
-      function compareObjects(o1, o2) {
-        for (const k in o1) {
-          if (!(k in o2)) return false;
-          if (typeof o1[k] === "object" && typeof o2[k] === "object") {
-            if (!compareObjects(o1[k], o2[k])) return false;
-          } else {
-            if (o1[k] !== o2[k]) return false;
-          }
-        }
-
-        return true;
-      }
-
-      const propss = getCompletePropsCached();
-      const responsiveCV = Object.entries(propss).reduce((acc, [key, value]) => {
-        const val = typeof value !== "object" ? {initial: value} : value;
-
-        return Object.entries(val).reduce((vacc, [screenSize, screenValue]) => {
-          vacc[screenSize] = {...vacc[screenSize], [key]: screenValue};
-
-          return vacc;
-        }, acc);
-      }, {});
-
-      // Combine compound variants and screen keys into pairs
-      const compoundVariantScreenPairs = cv.flatMap(
-        ({class: tvClass, className: tvClassName, ...compoundVariantOptions}) => {
-          const pairs = [];
-
-          for (const key in compoundVariantOptions) {
-            for (const screenKey in responsiveCV) {
-              if (compareObjects(compoundVariantOptions, responsiveCV[screenKey])) {
-                pairs.push({cvScreenKey: screenKey, tvClass, tvClassName});
-              }
+              if (!matched) return false;
+            } else {
+              if (o1[k] !== o2[k]) return false;
             }
           }
 
-          return pairs;
-        },
-      );
+          return true;
+        }
 
-      // Process each pair and collect results
-      result = compoundVariantScreenPairs.flatMap(({cvScreenKey, tvClass, tvClassName}) =>
-        cvScreenKey === "initial"
-          ? [tvClass || tvClassName]
-          : getScreenVariantValuesCached(cvScreenKey, tvClass || tvClassName),
-      );
+        for (const key in obj2) {
+          if (compareObjects(obj1, obj2[key])) {
+            const matchedObject = {...obj2[key], cvScreenKey: parentKey || key};
+
+            matchedObjects.push(matchedObject);
+          }
+        }
+
+        return matchedObjects;
+      }
+
+      const allProps = getCompleteProps(undefined, slotProps);
+
+      const responsiveCV = Object.entries(allProps).reduce((acc, [key, value]) => {
+        let val = value;
+
+        if (typeof value !== "object") {
+          val = {initial: value};
+        }
+
+        if (!val["initial"]) {
+          val["initial"] = defaultVariants[key];
+        }
+
+        return {
+          ...acc,
+          ...Object.entries(val).reduce((vacc, [screenSize, screenValue]) => {
+            let sValue = screenValue;
+
+            return {
+              ...vacc,
+              [screenSize]: {
+                ...allProps,
+                ...acc[screenSize],
+                [key]: sValue,
+              },
+            };
+          }, {}),
+        };
+      }, {});
+
+      for (const {class: tvClass, className: tvClassName, ...compoundVariantOptions} of cv) {
+        const matches = getMatchedObjects(compoundVariantOptions, responsiveCV);
+        const clx = tvClass || tvClassName;
+
+        result = [
+          ...result,
+          ...matches.flatMap(({cvScreenKey}) => {
+            if (cvScreenKey === "initial") {
+              return clx;
+            }
+
+            if (typeof clx === "object") {
+              return Object.entries(clx).map(([k, v]) => ({
+                [k]: getScreenVariantValues(cvScreenKey, v, [], k),
+              }));
+            }
+
+            return getScreenVariantValues(cvScreenKey, clx, []);
+          }),
+        ];
+      }
 
       return result;
     };
@@ -482,7 +423,11 @@ export const tv = (options, configProp) => {
         (Array.isArray(config.responsiveVariants) && config.responsiveVariants.length > 0) ||
         config.responsiveVariants === true;
 
-      return responsiveVarsEnabled
+      const responsiveCompoundVariantsEnabled = config.responsiveCompoundVariants === true;
+
+      const isResponsiveEnabled = responsiveVarsEnabled && responsiveCompoundVariantsEnabled;
+
+      return isResponsiveEnabled
         ? getResponsiveCompoundVariantsValue(cv, slotProps)
         : getStandardCompoundVariantsValue(cv, slotProps);
     };

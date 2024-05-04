@@ -176,9 +176,16 @@ const transformCompoundVariantsByScreens = (variants, screens) => {
   const responsive = [];
 
   for (const {class: tvClass, className} of variants) {
-    const formattedClassNames = [tvClass, className].flatMap((clx) => getVariants(clx, screens));
+    const clx = tvClass || className;
+
+    const formattedClassNames = getVariants(clx, screens);
 
     if (isEmpty(formattedClassNames)) continue;
+
+    if (!isArray(formattedClassNames)) {
+      responsive.push(formattedClassNames);
+      continue;
+    }
 
     screens.forEach((screen) => {
       let tempClassNames = "";

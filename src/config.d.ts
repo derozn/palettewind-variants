@@ -35,4 +35,6 @@ export type TVConfig<
     | boolean
     | TVGeneratedScreens[]
     | {[K in keyof V | keyof EV]?: boolean | TVGeneratedScreens[]};
+
+  responsiveCompoundVariants?: boolean;
 } & TWMConfig;
