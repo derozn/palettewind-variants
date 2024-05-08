@@ -8,6 +8,7 @@ const regExp = {
   comment: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm,
   blankLine: /^\s*$(?:\r\n?|\n)/gm,
   extension: /\.\w+/g,
+  twMergeConfig: /twMergeConfig,?/g,
 };
 
 const isArray = (param) => Array.isArray(param);
@@ -59,11 +60,12 @@ const pipeline = (...funcs) => {
 const getCleanContent = (content) => {
   const removeComment = content.replace(regExp.comment, "$1").toString();
   const removeBlankLine = removeComment.replace(regExp.blankLine, "").toString();
+  const removeTwMergeConfig = removeBlankLine.replace(regExp.twMergeConfig, "").toString();
 
   // TODO: support inline tv
   const removeExtend = (match) => match[1].replace(regExp.tvExtend, "").toString();
 
-  return Array.from(removeBlankLine.matchAll(regExp.tv), removeExtend);
+  return Array.from(removeTwMergeConfig.matchAll(regExp.tv), removeExtend);
 };
 
 const getTVObjects = (content) => {
