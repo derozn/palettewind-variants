@@ -103,7 +103,7 @@ export const tv = (options, configProp) => {
     // didTwMergeConfigChange = true;
     cachedTwMergeConfig = {
       ...cachedTwMergeConfig,
-      [config.twMergeConfig.prefix ?? "default"]: config.twMergeConfig,
+      [config.twMergeConfig.prefix || "default"]: config.twMergeConfig,
     };
   }
 
