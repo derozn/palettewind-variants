@@ -1,7 +1,7 @@
 import {twMerge as twMergeBase, extendTailwindMerge} from "tailwind-merge";
 
 import {
-  // isEqual,
+  isEqual,
   isEmptyObject,
   falsyToString,
   mergeObjects,
