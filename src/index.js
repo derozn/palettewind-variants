@@ -1,7 +1,7 @@
 import {twMerge as twMergeBase, extendTailwindMerge} from "tailwind-merge";
 
 import {
-  isEqual,
+  // isEqual,
   isEmptyObject,
   falsyToString,
   mergeObjects,
@@ -20,9 +20,14 @@ export const voidEmpty = (value) => (!!value ? value : undefined);
 
 export const cnBase = (...classes) => voidEmpty(flatArray(classes).filter(Boolean).join(" "));
 
-let cachedTwMerge = null;
-let cachedTwMergeConfig = {};
-let didTwMergeConfigChange = false;
+let cachedTwMerge = {
+  default: null,
+};
+
+let cachedTwMergeConfig = {
+  default: {},
+};
+// let didTwMergeConfigChange = false;
 
 export const cn =
   (...classes) =>
@@ -31,25 +36,29 @@ export const cn =
       return cnBase(classes);
     }
 
-    if (!cachedTwMerge || didTwMergeConfigChange) {
-      didTwMergeConfigChange = false;
-      cachedTwMerge = isEmptyObject(cachedTwMergeConfig)
+    const twMergeConfigPrefix = config?.twMergeConfig?.prefix || "default";
+    const currentTwMergeConfig = cachedTwMergeConfig[twMergeConfigPrefix];
+    const currentTwMergeFn = cachedTwMerge[twMergeConfigPrefix];
+
+    if (!currentTwMergeFn) {
+      // didTwMergeConfigChange = false;
+      cachedTwMerge[twMergeConfigPrefix] = isEmptyObject(currentTwMergeConfig)
         ? twMergeBase
         : extendTailwindMerge({
-            ...cachedTwMergeConfig,
+            ...currentTwMergeConfig,
             extend: {
               // Support for legacy tailwind-merge config shape
-              theme: cachedTwMergeConfig.theme,
-              classGroups: cachedTwMergeConfig.classGroups,
-              conflictingClassGroupModifiers: cachedTwMergeConfig.conflictingClassGroupModifiers,
-              conflictingClassGroups: cachedTwMergeConfig.conflictingClassGroups,
+              theme: currentTwMergeConfig.theme,
+              classGroups: currentTwMergeConfig.classGroups,
+              conflictingClassGroupModifiers: currentTwMergeConfig.conflictingClassGroupModifiers,
+              conflictingClassGroups: currentTwMergeConfig.conflictingClassGroups,
               // Support for new tailwind-merge config shape
-              ...cachedTwMergeConfig.extend,
+              ...currentTwMergeConfig.extend,
             },
           });
     }
 
-    return voidEmpty(cachedTwMerge(cnBase(classes)));
+    return voidEmpty(cachedTwMerge[twMergeConfigPrefix](cnBase(classes)));
   };
 
 const joinObjects = (obj1, obj2) => {
@@ -87,9 +96,15 @@ export const tv = (options, configProp) => {
       : defaultVariantsProps;
 
   // save twMergeConfig to the cache
-  if (!isEmptyObject(config.twMergeConfig) && !isEqual(config.twMergeConfig, cachedTwMergeConfig)) {
-    didTwMergeConfigChange = true;
-    cachedTwMergeConfig = config.twMergeConfig;
+  if (
+    !isEmptyObject(config.twMergeConfig) &&
+    !isEqual(config.twMergeConfig, cachedTwMergeConfig[config.twMergeConfig.prefix || "default"]) // !cachedTwMergeConfig[config.twMergeConfig.prefix || 'default'] /*&& !isEqual(config.twMergeConfig, cachedTwMergeConfig)*/
+  ) {
+    // didTwMergeConfigChange = true;
+    cachedTwMergeConfig = {
+      ...cachedTwMergeConfig,
+      [config.twMergeConfig.prefix ?? "default"]: config.twMergeConfig,
+    };
   }
 
   const isExtendedSlotsEmpty = isEmptyObject(extend?.slots);
